@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { IpcRenderer } from 'electron';
 
+import { FileLoadResponse } from '../../common/ipc/file.load.response';
+
+export interface FileInfo {
+  payload: any;
+  path: string | undefined;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -15,12 +22,16 @@ export class FileService {
     }
   }
 
-  async getFiles() {
-    return new Promise<string[]>((resolve, reject) => {
-      this.ipc.once('getFilesResponse', (event, arg) => {
-        resolve(arg);
+  async loadFile(): Promise<FileInfo> {
+    return new Promise<FileInfo>((resolve, reject) => {
+      this.ipc.on('loadFileResponse', (event, arg) => {
+        const response: FileLoadResponse = arg;
+        if (response.progress === 100) {
+          this.ipc.removeAllListeners('loadFileResponse');
+          return resolve(response as FileInfo);
+        }
       });
-      this.ipc.send('getFiles');
+      this.ipc.send('loadFile');
     });
   }
 }

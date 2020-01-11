@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+
 import { FileService } from './file.service';
+import { LinkerMap } from '../../common/interfaces/linkermap';
 
 @Component({
   selector: 'app-root',
@@ -8,15 +10,19 @@ import { FileService } from './file.service';
 })
 export class AppComponent implements OnInit {
   title = 'map-viewer';
-  files: string[];
+  filePath: string;
+  linkerMap: LinkerMap;
 
   constructor(private fileService: FileService) {}
 
   ngOnInit() {
-    this.getFiles();
+    this.loadFile();
   }
 
-  getFiles() {
-    this.fileService.getFiles().then(files => this.files = files);
+  loadFile() {
+    this.fileService.loadFile().then(fileInfo => {
+      this.filePath = fileInfo.path;
+      this.linkerMap = fileInfo.payload as LinkerMap;
+    });
   }
 }
