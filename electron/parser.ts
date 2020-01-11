@@ -43,7 +43,7 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
             file.archiveName = found[2];
           }
           if (found.length > 3) {
-            file.extactSymbol = found[3];
+            file.extractSymbol = found[3];
           }
           linkerMap.processedFiles.push(file);
         }

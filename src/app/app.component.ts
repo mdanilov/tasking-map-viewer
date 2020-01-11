@@ -8,21 +8,36 @@ import { LinkerMap } from '../../common/interfaces/linkermap';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'map-viewer';
   filePath: string;
   linkerMap: LinkerMap;
+  dataset = [];
+
+  tableSettings = {
+    rowHeaders: false,
+    colHeaders: true,
+    columnSorting: true,
+    currentRowClassName: 'currentRow',
+    manualColumnResize: true,
+    licenseKey: 'non-commercial-and-evaluation'
+  };
 
   constructor(private fileService: FileService) {}
 
-  ngOnInit() {
+  onSelect() {
     this.loadFile();
   }
 
-  loadFile() {
-    this.fileService.loadFile().then(fileInfo => {
+  onEnter(value: string) {
+    this.loadFile(value);
+  }
+
+  loadFile(path?: string) {
+    this.fileService.loadFile(path).then(fileInfo => {
       this.filePath = fileInfo.path;
       this.linkerMap = fileInfo.payload as LinkerMap;
+      this.dataset = this.linkerMap.processedFiles;
     });
   }
 }

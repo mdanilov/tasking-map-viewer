@@ -1,7 +1,7 @@
 export interface File {
   name: string;
   archiveName?: string;
-  extactSymbol?: string;
+  extractSymbol?: string;
 }
 
 export interface LinkerMap {

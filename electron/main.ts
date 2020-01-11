@@ -4,6 +4,7 @@ import * as url from 'url';
 
 import { parseMapFile } from './parser';
 import { FileLoadResponse } from '../common/ipc/file.load.response';
+import { FileLoadRequest } from '../common/ipc/file.load.request';
 
 let win: BrowserWindow;
 
@@ -32,8 +33,6 @@ function createWindow() {
     })
   );
 
-  win.webContents.openDevTools();
-
   win.on('closed', () => {
     win = null;
   });
@@ -42,17 +41,23 @@ function createWindow() {
 ipcMain.on('loadFile', (event, arg) => {
   const response: FileLoadResponse = new FileLoadResponse();
 
-  const file = dialog.showOpenDialogSync({
-    filters: [{ name: 'Linker Map File', extensions: ['map'] }],
-    properties: ['openFile']
-  });
+  let fpath = (arg as FileLoadRequest).path;
+  if (fpath == null) {
+    const files = dialog.showOpenDialogSync({
+      filters: [{ name: 'Linker Map File', extensions: ['map'] }],
+      properties: ['openFile']
+    });
 
-  if (file.length > 0) {
+    if (files.length > 0) {
+      fpath = files[0];
+    }
+  }
 
-    response.path = file[0];
+  if (fpath) {
+    response.path = fpath;
     win.webContents.send('loadFileResponse', response);
 
-    parseMapFile(file[0]).then( linkerMap => {
+    parseMapFile(fpath).then( linkerMap => {
       response.payload = linkerMap;
       response.progress = 100;
       win.webContents.send('loadFileResponse', response);
