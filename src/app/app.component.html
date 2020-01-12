@@ -1,11 +1,16 @@
-<div>
-  <input #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
-  <button (click)="onSelect()">Select</button>
-  <hot-table
-    [settings]="tableSettings"
-    [data]="dataset">
-      <hot-column data="name" [readOnly]="true" title="Name"></hot-column>
-      <hot-column data="archiveName" [readOnly]="true" title="Archive name"></hot-column>
-      <hot-column data="extractSymbol" [readOnly]="true" title="Symbol"></hot-column>
-  </hot-table>
+<div id="main">
+  <div id="controls">
+    <input #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
+    <button (click)="onSelect()">Select</button>
+  </div>
+  <div id="tables">
+    <hot-table
+      class="hot"
+      [settings]="tableSettings"
+      [data]="dataset">
+        <hot-column data="name" [readOnly]="true" title="Name"></hot-column>
+        <hot-column data="archiveName" [readOnly]="true" title="Archive name"></hot-column>
+        <hot-column data="extractSymbol" [readOnly]="true" title="Symbol"></hot-column>
+    </hot-table>
+  </div>
 </div>

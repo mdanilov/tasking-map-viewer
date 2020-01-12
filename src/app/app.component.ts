@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import * as Handsontable from 'handsontable';
 
 import { FileService } from './file.service';
 import { LinkerMap } from '../../common/interfaces/linkermap';
@@ -14,13 +15,20 @@ export class AppComponent {
   linkerMap: LinkerMap;
   dataset = [];
 
-  tableSettings = {
+  tableSettings: Handsontable.default.GridSettings = {
     rowHeaders: false,
     colHeaders: true,
     columnSorting: true,
     currentRowClassName: 'currentRow',
     manualColumnResize: true,
-    licenseKey: 'non-commercial-and-evaluation'
+    stretchH: 'all',
+    minRows: 30,
+    preventOverflow: 'horizontal',
+    readOnly: true,
+    licenseKey: 'non-commercial-and-evaluation',
+    disableVisualSelection: true,
+    fragmentSelection: true, // enable text selection within table
+    dataSchema: { name: null, archiveName: null, extractSymbol: null }
   };
 
   constructor(private fileService: FileService) {}
