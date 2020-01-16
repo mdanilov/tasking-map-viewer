@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { HotTableRegisterer } from '@handsontable/angular';
 import * as Handsontable from 'handsontable';
 
 import { FileService, FileProgressCallback } from './file.service';
@@ -10,17 +10,21 @@ import { LinkerMap, LinkRecord, SectionType } from '../../common/interfaces/link
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'map-viewer';
   filePath: string;
   linkerMap: LinkerMap;
   dataset = [];
   showProgressBar: boolean;
+  currentView: string;
 
+  private hotRegisterer = new HotTableRegisterer();
+  modulesTableId = 'modules-table-id';
   tableSettings: Handsontable.default.GridSettings = {
-    rowHeaders: true,
+    rowHeaders: false,
     colHeaders: true,
     columnSorting: true,
+    colWidths: [10, 10, 10],
     currentRowClassName: 'currentRow',
     manualColumnResize: true,
     stretchH: 'all',
@@ -33,19 +37,40 @@ export class AppComponent {
     dataSchema: { name: null, bssSize: null, dataSize: null, textSize: null },
     wordWrap: true, // the text of the cell content is wrapped if it does not fit in the fixed column width
     autoColumnSize: false, // disable setting column widths based on their widest cells
-    nestedRows: true,
+    nestedRows: false,
+    filters: true
   };
 
   constructor(private fileService: FileService, private cd: ChangeDetectorRef) {
     this.showProgressBar = false;
+    this.currentView = 'main';
+  }
+
+  ngOnInit() {
+    //
   }
 
   onSelect() {
     this.loadFile();
   }
 
+  onSettings() {
+    this.currentView = 'settings';
+  }
+
+  onClose() {
+    this.currentView = 'main';
+  }
+
   onEnter(value: string) {
     this.loadFile(value);
+  }
+
+  applyFilter(filterValue: string) {
+    const filtersPlugin = this.hotRegisterer.getInstance(this.modulesTableId).getPlugin('filters');
+    filtersPlugin.clearConditions(3);
+    filtersPlugin.addCondition(3, 'contains', [filterValue], 'conjunction');
+    filtersPlugin.filter();
   }
 
   calcTotalSectionSizes(record: LinkRecord): Map<SectionType, number> {

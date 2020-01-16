@@ -1,21 +1,47 @@
-<div id="main">
-  <div id="controls">
-    <input #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
-    <button (click)="onSelect()">Select</button>
+<div [ngSwitch]="currentView">
+  <div *ngSwitchCase="'settings'" class="settings">
+    <button mat-icon-button (click)="onClose()">
+      <mat-icon aria-hidden="false" aria-label="Close">close</mat-icon>
+    </button>
+    <form>
+      <mat-form-field>
+        <input matInput placeholder="Bss section filter" value=".bss">
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Data section filter" value=".data">
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput placeholder="Text section filter" value=".text">
+      </mat-form-field>
+    </form>
   </div>
-  <div class="flex">
-    <mat-progress-bar *ngIf="showProgressBar" mode="indeterminate"></mat-progress-bar>
-  </div>
-  <div id="tables">
-    <hot-table
-      class="hot"
-      [settings]="tableSettings"
-      [data]="dataset">
-        <hot-column data="name" [readOnly]="true" title="Name"></hot-column>
-        <hot-column data="bssSize" [readOnly]="true" title="BSS"></hot-column>
-        <hot-column data="dataSize" [readOnly]="true" title="DATA"></hot-column>
-        <hot-column data="textSize" [readOnly]="true" title="TEXT"></hot-column>
-        <hot-column data="otherSize" [readOnly]="true" title="OTHER"></hot-column>
-    </hot-table>
+  <div *ngSwitchCase="'main'" class="main">
+    <div class="controls">
+      <form>
+        <mat-form-field>
+          <input matInput placeholder="Path to linker .map file" #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
+        </mat-form-field>
+      </form>
+      <button mat-raised-button (click)="onSelect()">...</button>
+      <button mat-button (click)="onSettings()">Settings</button>
+    </div>
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
+    <div class="flex">
+      <mat-progress-bar *ngIf="showProgressBar" mode="indeterminate"></mat-progress-bar>
+    </div>
+    <div id="tables">
+      <hot-table
+        [hotId]="modulesTableId"
+        class="hot"
+        [settings]="tableSettings"
+        [data]="dataset">
+          <hot-column data="textSize" [readOnly]="true" title="TEXT"></hot-column>
+          <hot-column data="bssSize" [readOnly]="true" title="BSS"></hot-column>
+          <hot-column data="dataSize" [readOnly]="true" title="DATA"></hot-column>
+          <hot-column data="name" [readOnly]="true" title="Module"></hot-column>
+      </hot-table>
+    </div>
   </div>
 </div>
