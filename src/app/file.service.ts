@@ -9,6 +9,8 @@ export interface FileInfo {
   path: string | undefined;
 }
 
+export type FileProgressCallback = (percent?: number) => void;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,10 +25,13 @@ export class FileService {
     }
   }
 
-  async loadFile(path?: string): Promise<FileInfo> {
+  async loadFile(path?: string, progressCallback?: FileProgressCallback): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       this.ipc.on('loadFileResponse', (event, arg) => {
         const response: FileLoadResponse = arg;
+        if (progressCallback != null) {
+          progressCallback(response.progress);
+        }
         if (response.progress === 100) {
           this.ipc.removeAllListeners('loadFileResponse');
           return resolve(response as FileInfo);

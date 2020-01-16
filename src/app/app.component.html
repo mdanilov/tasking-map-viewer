@@ -3,6 +3,9 @@
     <input #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
     <button (click)="onSelect()">Select</button>
   </div>
+  <div class="flex">
+    <mat-progress-bar *ngIf="showProgressBar" mode="indeterminate"></mat-progress-bar>
+  </div>
   <div id="tables">
     <hot-table
       class="hot"

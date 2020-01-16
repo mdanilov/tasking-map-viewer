@@ -48,7 +48,7 @@ ipcMain.on('loadFile', (event, arg) => {
       properties: ['openFile']
     });
 
-    if (files.length > 0) {
+    if (files != null && files.length > 0) {
       fpath = files[0];
     }
   }

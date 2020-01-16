@@ -31,6 +31,10 @@
   display: flex;
 }
 
+.flex {
+  display: flex;
+}
+
 .hot {
   overflow: hidden;
   flex-grow: 1;

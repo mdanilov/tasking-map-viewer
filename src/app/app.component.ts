@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef } from '@angular/core';
 import * as Handsontable from 'handsontable';
 
-import { FileService } from './file.service';
+import { FileService, FileProgressCallback } from './file.service';
 import { LinkerMap, LinkRecord, SectionType } from '../../common/interfaces/linkermap';
 
 @Component({
@@ -14,6 +15,7 @@ export class AppComponent {
   filePath: string;
   linkerMap: LinkerMap;
   dataset = [];
+  showProgressBar: boolean;
 
   tableSettings: Handsontable.default.GridSettings = {
     rowHeaders: true,
@@ -34,7 +36,9 @@ export class AppComponent {
     nestedRows: true,
   };
 
-  constructor(private fileService: FileService) {}
+  constructor(private fileService: FileService, private cd: ChangeDetectorRef) {
+    this.showProgressBar = false;
+  }
 
   onSelect() {
     this.loadFile();
@@ -72,61 +76,29 @@ export class AppComponent {
     const archiveRefs = new Map<string, any>();
 
     linkerMap.linkResult.forEach((record) => {
-      // the file is from archive
-      if (fileToArchive.has(record.fileName)) {
-        const archiveName = fileToArchive.get(record.fileName);
-
-        // this archive was not created yet
-        if (!archiveRefs.has(archiveName)) {
-          const newArchive = {
-            name: archiveName,
-            bssSize: 0,
-            dataSize: 0,
-            textSize: 0,
-            otherSize: 0,
-            __children: []
-          };
-          archiveRefs.set(archiveName, newArchive);
-          dataset.push(newArchive);
-        }
-
-        const totalSize = this.calcTotalSectionSizes(record);
-        const archiveRef = archiveRefs.get(archiveName);
-
-        // add file to the archive children property
-        archiveRef.__children.push({
-          name: record.fileName,
-          bssSize: totalSize.get(SectionType.Bss),
-          dataSize: totalSize.get(SectionType.Data),
-          textSize: totalSize.get(SectionType.Text),
-          otherSize: totalSize.get(SectionType.Other),
-        });
-
-        // updates sum sizes for archive
-        archiveRef.bssSize += totalSize.get(SectionType.Bss);
-        archiveRef.dataSize += totalSize.get(SectionType.Data);
-        archiveRef.textSize += totalSize.get(SectionType.Text);
-        archiveRef.otherSize += totalSize.get(SectionType.Other);
-      // the file has linked directly (obj file)
-      } else {
-        const totalSize = this.calcTotalSectionSizes(record);
-        dataset.push({
-          name: record.fileName,
-          bssSize: totalSize.get(SectionType.Bss),
-          dataSize: totalSize.get(SectionType.Data),
-          textSize: totalSize.get(SectionType.Text),
-          otherSize: totalSize.get(SectionType.Other),
-        });
-      }
+      const archiveName = fileToArchive.get(record.fileName);
+      const totalSize = this.calcTotalSectionSizes(record);
+      dataset.push({
+        name: archiveName ? archiveName + '(' + record.fileName + ')' : record.fileName,
+        bssSize: totalSize.get(SectionType.Bss),
+        dataSize: totalSize.get(SectionType.Data),
+        textSize: totalSize.get(SectionType.Text),
+        otherSize: totalSize.get(SectionType.Other),
+      });
     });
 
     return dataset;
   }
 
   loadFile(path?: string) {
-    this.fileService.loadFile(path).then(fileInfo => {
+    this.fileService.loadFile(path,
+      (percent) => {
+        this.showProgressBar = true;
+        this.cd.detectChanges();      // notify angular about view changes
+    }).then(fileInfo => {
       this.filePath = fileInfo.path;
       this.dataset = this.prepareDataset(fileInfo.payload as LinkerMap);
+      this.showProgressBar = false;
     });
   }
 }
