@@ -9,9 +9,9 @@
   "main": "electron/dist/electron/main.js",
   "scripts": {
     "start": "npm run build && npm run electron",
-    "build": "ng build --base-href ./",
+    "build": "ng build --base-href ./ && tsc --p electron",
     "lint": "./node_modules/.bin/tslint --project .",
-    "electron": "tsc --p electron && electron .",
+    "electron": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
