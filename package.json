@@ -20,7 +20,6 @@
     "files": [
       "./electron/dist/**/*"
     ],
-    "asar": false,
     "directories": {
       "output": "dist/release"
     },

@@ -4,3 +4,25 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.handsontable .htDimmed {
+    color: black;
+}
+
+.handsontable tbody th, .handsontable tbody td {
+    background-color: #fff0;
+    border: 0;
+}
+
+.handsontable tbody tr:nth-child(even) {
+    background-color: rgba(103, 58, 183, 0.1);
+}
+
+.currentRow, .current {
+    background-color: #673ab7 !important;
+    color: white !important;
+}
+
+.htBorders {
+    visibility: hidden;
+}
