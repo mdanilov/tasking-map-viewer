@@ -1,15 +1,32 @@
 {
   "name": "map-viewer",
-  "version": "0.0.0",
+  "description": "MapViewer",
+  "version": "0.0.1",
+  "author": {
+    "name": "Maksim Danilov",
+    "email": "maksim.danilov@esrlabs.com"
+  },
   "main": "electron/dist/electron/main.js",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
-    "electron": "ng build --base-href ./ && tsc --p electron && electron ."
+    "start": "npm run build && npm run electron",
+    "build": "ng build --base-href ./",
+    "lint": "./node_modules/.bin/tslint --project .",
+    "electron": "tsc --p electron && electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.electron.map-viewer",
+    "files": [
+      "./electron/dist/**/*"
+    ],
+    "asar": false,
+    "directories": {
+      "output": "dist/release"
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools"
+    }
   },
   "private": true,
   "dependencies": {
@@ -40,6 +57,7 @@
     "@types/node": "~8.9.4",
     "codelyzer": "^5.0.0",
     "electron": "^7.1.8",
+    "electron-builder": "^22.3.2",
     "jasmine-core": "~3.4.0",
     "jasmine-spec-reporter": "~4.2.1",
     "karma": "~4.1.0",
@@ -47,7 +65,6 @@
     "karma-coverage-istanbul-reporter": "~2.0.1",
     "karma-jasmine": "~2.0.1",
     "karma-jasmine-html-reporter": "^1.4.0",
-    "protractor": "~5.4.0",
     "ts-node": "~7.0.0",
     "tslint": "~5.15.0",
     "typescript": "~3.5.3"
