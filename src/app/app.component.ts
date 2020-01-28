@@ -17,6 +17,9 @@ export class AppComponent implements OnInit {
   dataset = [];
   showProgressBar: boolean;
   currentView: string;
+  bssSectionNames: string = '.bss';
+  dataSectionNames: string = '.data';
+  textSectionNames: string = '.text';
 
   private hotRegisterer = new HotTableRegisterer();
   modulesTableId = 'modules-table-id';
@@ -59,6 +62,9 @@ export class AppComponent implements OnInit {
   }
 
   onClose() {
+    if (this.linkerMap) {
+      this.dataset = this.prepareDataset(this.linkerMap);
+    }
     this.currentView = 'main';
   }
 
@@ -73,15 +79,29 @@ export class AppComponent implements OnInit {
     filtersPlugin.filter();
   }
 
+  getSectionType(section: string): SectionType {
+    const name = section.substring(0, section.indexOf('.', 1));
+    if (this.bssSectionNames.split(/\s*,\s*/).includes(name)) {
+      return SectionType.Bss;
+    } else if (this.dataSectionNames.split(/\s*,\s*/).includes(name)) {
+      return SectionType.Data;
+    } else if (this.textSectionNames.split(/\s*,\s*/).includes(name)) {
+      return SectionType.Text;
+    } else {
+      return SectionType.Other;
+    }
+  }
+
   calcTotalSectionSizes(record: LinkRecord): Map<SectionType, number> {
     const result = new Map([
-      [SectionType.Bss,   0],
-      [SectionType.Data,  0],
-      [SectionType.Text,  0],
+      [SectionType.Bss, 0],
+      [SectionType.Data, 0],
+      [SectionType.Text, 0],
       [SectionType.Other, 0],
     ]);
 
     record.sections.forEach((section) => {
+      section.type = this.getSectionType(section.in.section);
       result.set(section.type, result.get(section.type) + section.in.size);
     });
 
@@ -98,8 +118,6 @@ export class AppComponent implements OnInit {
     });
 
     const dataset = [];
-    const archiveRefs = new Map<string, any>();
-
     linkerMap.linkResult.forEach((record) => {
       const archiveName = fileToArchive.get(record.fileName);
       const totalSize = this.calcTotalSectionSizes(record);
@@ -120,10 +138,11 @@ export class AppComponent implements OnInit {
       (percent) => {
         this.showProgressBar = true;
         this.cd.detectChanges();      // notify angular about view changes
-    }).then(fileInfo => {
-      this.filePath = fileInfo.path;
-      this.dataset = this.prepareDataset(fileInfo.payload as LinkerMap);
-      this.showProgressBar = false;
-    });
+      }).then(fileInfo => {
+        this.filePath = fileInfo.path;
+        this.linkerMap = fileInfo.payload as LinkerMap;
+        this.dataset = this.prepareDataset(this.linkerMap);
+        this.showProgressBar = false;
+      });
   }
 }
