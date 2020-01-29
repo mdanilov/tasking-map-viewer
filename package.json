@@ -39,7 +39,7 @@
         }
       ]
     },
-    "windows": {
+    "win": {
       "target": [
         {
           "target": "zip"
