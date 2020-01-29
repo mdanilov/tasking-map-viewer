@@ -17,6 +17,7 @@
   },
   "build": {
     "appId": "com.electron.map-viewer",
+    "productName": "map-viewer",
     "files": [
       "./electron/dist/**/*"
     ],
@@ -24,7 +25,26 @@
       "output": "dist/release"
     },
     "mac": {
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "zip"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "zip"
+        }
+      ]
+    },
+    "windows": {
+      "target": [
+        {
+          "target": "zip"
+        }
+      ]
     }
   },
   "private": true,
