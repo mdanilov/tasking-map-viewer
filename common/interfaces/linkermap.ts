@@ -28,7 +28,18 @@ export interface LinkRecord {
   sections: Section[];
 }
 
+export interface LocateRecord {
+  chip: string;
+  group: string;
+  section: string;
+  size: number;
+  spaceAddr: number;
+  chipAddr: number;
+  alignment: number;
+}
+
 export interface LinkerMap {
   processedFiles: File[];
   linkResult: LinkRecord[];
+  locateResult: LocateRecord[];
 }

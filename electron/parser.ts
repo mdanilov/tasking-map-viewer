@@ -6,12 +6,14 @@ import * as lm from '../common/interfaces/linkermap';
 enum FilePart {
   ProcessedFilePaths,
   LinkPart,
+  LocateResults,
   UnknownPart
 }
 
 const FilePartKeywords = new Map();
 FilePartKeywords.set(FilePart.ProcessedFilePaths, /^[\*]+\s*Processed Files\s*[\*]+$/);
 FilePartKeywords.set(FilePart.LinkPart, /^[\*]+\s*Link Result\s*[\*]+$/);
+FilePartKeywords.set(FilePart.LocateResults, /^[\*]+\s*Locate Result\s*[\*]+$/);
 FilePartKeywords.set(FilePart.UnknownPart, /^[\*]* .* [\*]*$/);
 
 function getSectionType(section: string): lm.SectionType {
@@ -30,12 +32,14 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
   return new Promise<lm.LinkerMap>((resolve, reject) => {
     const linkerMap: lm.LinkerMap = {
       processedFiles: [],
-      linkResult: []
+      linkResult: [],
+      locateResult: []
     };
     let linesCount = 0;
     let filePart: FilePart | undefined = null;
     let previous: object = null; // temporary object to handle multiline cases
     const linkResult = new Map<string, lm.LinkRecord>();
+    const locateResult = new Map<string, lm.LocateRecord>();
 
     const readInterface = readline.createInterface({
       input: fs.createReadStream(path),
@@ -118,6 +122,45 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
               in: { section: found[2], size: parseInt(found[3], 16) },
               out: { offset: parseInt(found[4], 16), section: found[5], size: parseInt(found[6], 16) }
             });
+          }
+        }
+      } else if (filePart === FilePart.LocateResults) {
+        // check for records delimiter
+        const tableEntryDelimeterRegEx = /^\|-+\|$/;
+        if (tableEntryDelimeterRegEx.test(line)) {
+          previous = null;
+        }
+
+        const recordRegEx = new RegExp(''
+          + /^\|\s+(\S.*\S|)\s+/.source     // Chip
+          + /\|\s+(\S.*\S|)\s+/.source      // Group
+          + /\|\s+(\S.*\S|)\s+/.source      // Section
+          + /\|\s+(\S.*\S|)\s+/.source      // Size (MAU)
+          + /\|\s+(\S.*\S|)\s+/.source      // Space addr
+          + /\|\s+(\S.*\S|)\s+/.source      // Chip addr
+          + /\|\s+(\S.*\S|)\s+\|$/.source   // Alignment
+        );
+        const found = line.match(recordRegEx);
+        // skip table header started with '[in] File' column
+        if (found && found[1] !== 'Chip') {
+          // handle multiline case
+          if (previous && found[1].length === 0) {
+            const previousRecord = previous as lm.LocateRecord;
+            // concat string fields in 'previous' record
+            previousRecord.section += found[3];
+          } else {
+            const record = {
+              chip: found[1],
+              group: found[2],
+              section: found[3],
+              size: parseInt(found[4], 16),
+              spaceAddr: parseInt(found[5], 16),
+              chipAddr: parseInt(found[6], 16),
+              alignment: parseInt(found[7], 16)
+            };
+            linkerMap.locateResult.push(record);
+            // save ref to the 'previous' var for multiline case
+            previous = record;
           }
         }
       }
