@@ -27,7 +27,7 @@ function createWindow() {
 
   win.loadURL(
     url.format({
-      pathname: path.join(__dirname, `../../../dist/map-viewer/index.html`),
+      pathname: path.join(__dirname, `../map-viewer/index.html`),
       protocol: 'file:',
       slashes: true,
     })

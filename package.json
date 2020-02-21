@@ -6,7 +6,7 @@
     "name": "Maksim Danilov",
     "email": "maksim.danilov@esrlabs.com"
   },
-  "main": "electron/dist/electron/main.js",
+  "main": "dist/electron/main.js",
   "scripts": {
     "start": "npm run build && npm run electron",
     "build": "ng build --base-href ./ && tsc --p electron",
@@ -19,10 +19,10 @@
     "appId": "com.electron.map-viewer",
     "productName": "map-viewer",
     "files": [
-      "./electron/dist/**/*"
+      "./dist/**/*"
     ],
     "directories": {
-      "output": "dist/release"
+      "output": "release"
     },
     "mac": {
       "category": "public.app-category.developer-tools",
