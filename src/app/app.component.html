@@ -16,32 +16,77 @@
     </form>
   </div>
   <div *ngSwitchCase="'main'" class="main">
-    <div class="controls">
-      <form>
-        <mat-form-field>
-          <input matInput placeholder="Path to linker .map file" #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
-        </mat-form-field>
-      </form>
-      <button mat-raised-button (click)="onSelect()">...</button>
-      <button mat-button (click)="onSettings()">Settings</button>
-    </div>
-    <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-    </mat-form-field>
-    <div class="flex">
+    <div class="progress-bar">
       <mat-progress-bar *ngIf="showProgressBar" mode="indeterminate"></mat-progress-bar>
     </div>
-    <div id="tables">
-      <hot-table
-        [hotId]="modulesTableId"
-        class="hot"
-        [settings]="tableSettings"
-        [data]="dataset">
-          <hot-column data="textSize" [readOnly]="true" title="TEXT"></hot-column>
-          <hot-column data="bssSize" [readOnly]="true" title="BSS"></hot-column>
-          <hot-column data="dataSize" [readOnly]="true" title="DATA"></hot-column>
-          <hot-column data="name" [readOnly]="true" title="Module"></hot-column>
-      </hot-table>
+    <div class="split-container">
+      <div class="split-container-item">
+        <div class="controls">
+          <form>
+            <mat-form-field>
+              <input matInput placeholder="Path to linker .map file" #box (keyup.enter)="onEnter(box.value)" value="{{filePath}}">
+            </mat-form-field>
+          </form>
+          <button mat-raised-button (click)="onSelect()">...</button>
+          <button mat-button (click)="onSettings()">Settings</button>
+        </div>
+        <mat-form-field>
+          <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+        </mat-form-field>
+      </div>
+      <div class="split-container-item">
+        <div class="memory-table">
+          <mat-table mat-table [dataSource]="usedResources">
+            <ng-container matColumnDef="name">
+              <mat-header-cell mat-header-cell *matHeaderCellDef> Memory </mat-header-cell>
+              <mat-cell mat-cell *matCellDef="let element"> {{element.name}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="data">
+              <mat-header-cell mat-header-cell *matHeaderCellDef> Used </mat-header-cell>
+              <mat-cell mat-cell *matCellDef="let element"> {{element.data + element.code}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="free">
+              <mat-header-cell mat-header-cell *matHeaderCellDef> Free </mat-header-cell>
+              <mat-cell mat-cell *matCellDef="let element"> {{element.free}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="total">
+              <mat-header-cell mat-header-cell *matHeaderCellDef> Total </mat-header-cell>
+              <mat-cell mat-cell *matCellDef="let element"> {{element.total - element.reserved}} </mat-cell>
+            </ng-container>
+            <mat-header-row mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          </mat-table>
+        </div>
+      </div>
+    </div>
+    <div class="split-container full-height">
+      <div class="split-container-item">
+        <div class="table">
+          <hot-table
+            [hotId]="modulesTableId"
+            class="hot"
+            [settings]="tableSettings"
+            [data]="dataset">
+              <hot-column data="textSize" [readOnly]="true" title="TEXT"></hot-column>
+              <hot-column data="bssSize" [readOnly]="true" title="BSS"></hot-column>
+              <hot-column data="dataSize" [readOnly]="true" title="DATA"></hot-column>
+              <hot-column data="name" [readOnly]="true" title="Module"></hot-column>
+          </hot-table>
+        </div>
+      </div>
+      <div class="split-container-item">
+        <div class="table">
+          <hot-table
+            class="hot"
+            [hotId]="locationTableId"
+            [settings]="locationTableSettings"
+            [data]="locationTableDataset">
+              <hot-column data="chip" [readOnly]="true" title="CHIP"></hot-column>
+              <hot-column data="size" [readOnly]="true" title="SIZE"></hot-column>
+              <hot-column data="name" [readOnly]="true" title="Module"></hot-column>
+          </hot-table>
+        </div>
+      </div>
     </div>
   </div>
 </div>

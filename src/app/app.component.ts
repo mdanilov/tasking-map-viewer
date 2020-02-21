@@ -3,7 +3,7 @@ import { HotTableRegisterer } from '@handsontable/angular';
 import * as Handsontable from 'handsontable';
 
 import { FileService, FileProgressCallback } from './file.service';
-import { LinkerMap, LinkRecord, SectionType } from '../../common/interfaces/linkermap';
+import { LinkerMap, LinkRecord, SectionType, LocateRecord } from '../../common/interfaces/linkermap';
 
 @Component({
   selector: 'app-root',
@@ -17,9 +17,12 @@ export class AppComponent implements OnInit {
   dataset = [];
   showProgressBar: boolean;
   currentView: string;
-  bssSectionNames: string = '.bss';
-  dataSectionNames: string = '.data';
-  textSectionNames: string = '.text';
+  bssSectionNames = '.bss';
+  dataSectionNames = '.data';
+  textSectionNames = '.text';
+
+  displayedColumns: string[] = ['name', 'data', 'free', 'total'];
+  usedResources = [];
 
   private hotRegisterer = new HotTableRegisterer();
   modulesTableId = 'modules-table-id';
@@ -42,6 +45,38 @@ export class AppComponent implements OnInit {
     autoColumnSize: false, // disable setting column widths based on their widest cells
     nestedRows: false,
     filters: true
+  };
+
+  locationTableDataset = [];
+  locationTableId = 'location-table-id';
+  locationTableSettings: Handsontable.default.GridSettings = {
+    rowHeaders: false,
+    colHeaders: true,
+    colWidths: [20, 10],
+    currentRowClassName: 'currentRow',
+    manualColumnResize: true,
+    stretchH: 'all',
+    minRows: 30,
+    preventOverflow: 'horizontal',
+    readOnly: true,
+    licenseKey: 'non-commercial-and-evaluation',
+    disableVisualSelection: 'area',
+    fragmentSelection: true, // enable text selection within table
+    dataSchema: { name: null, chip: null, size: null },
+    wordWrap: true, // the text of the cell content is wrapped if it does not fit in the fixed column width
+    autoColumnSize: false, // disable setting column widths based on their widest cells
+    nestedRows: false,
+    filters: true,
+    columnSorting: false,
+    multiColumnSorting: {
+      initialConfig: [{
+        column: 0,
+        sortOrder: 'asc'
+      }, {
+        column: 1,
+        sortOrder: 'desc'
+      }]
+    }
   };
 
   constructor(private fileService: FileService, private cd: ChangeDetectorRef) {
@@ -73,10 +108,16 @@ export class AppComponent implements OnInit {
   }
 
   applyFilter(filterValue: string) {
-    const filtersPlugin = this.hotRegisterer.getInstance(this.modulesTableId).getPlugin('filters');
-    filtersPlugin.clearConditions(3);
-    filtersPlugin.addCondition(3, 'contains', [filterValue], 'conjunction');
-    filtersPlugin.filter();
+    for (const tableId of [this.modulesTableId, this.locationTableId]) {
+      const table = this.hotRegisterer.getInstance(tableId);
+      const filtersPlugin = table.getPlugin('filters');
+      const moduleColumn = table.getColHeader().findIndex((col) => col === 'Module');
+      if (moduleColumn) {
+        filtersPlugin.clearConditions(moduleColumn);
+        filtersPlugin.addCondition(moduleColumn, 'contains', [filterValue], 'conjunction');
+        filtersPlugin.filter();
+      }
+    }
   }
 
   getSectionType(section: string): SectionType {
@@ -110,6 +151,11 @@ export class AppComponent implements OnInit {
 
   prepareDataset(linkerMap: LinkerMap) {
     const fileToArchive = new Map<string, string>();
+    const sectionLocationMapping = new Map<string, LocateRecord>();
+
+    linkerMap.locateResult.forEach((locationRecord) => {
+      sectionLocationMapping.set(locationRecord.section, locationRecord);
+    });
 
     linkerMap.processedFiles.forEach((file) => {
       if (file.archiveName) {
@@ -118,17 +164,38 @@ export class AppComponent implements OnInit {
     });
 
     const dataset = [];
+    const locationDataset = [];
     linkerMap.linkResult.forEach((record) => {
       const archiveName = fileToArchive.get(record.fileName);
       const totalSize = this.calcTotalSectionSizes(record);
+      const name = archiveName ? archiveName + '(' + record.fileName + ')' : record.fileName;
       dataset.push({
-        name: archiveName ? archiveName + '(' + record.fileName + ')' : record.fileName,
+        name,
         bssSize: totalSize.get(SectionType.Bss),
         dataSize: totalSize.get(SectionType.Data),
         textSize: totalSize.get(SectionType.Text),
         otherSize: totalSize.get(SectionType.Other),
       });
+
+      // chip <-> size
+      const fileChipSizeStats = new Map<string, number>();
+      record.sections.forEach((section) => {
+        const location = sectionLocationMapping.get(section.out.section);
+        if (location) {
+          if (!fileChipSizeStats.has(location.chip)) {
+            fileChipSizeStats.set(location.chip, location.size);
+          } else {
+            fileChipSizeStats[location.chip] += location.size;
+          }
+        }
+      });
+
+      fileChipSizeStats.forEach((value, key) => {
+        locationDataset.push({ name, chip: key, size: value });
+      });
     });
+
+    this.locationTableDataset = locationDataset;
 
     return dataset;
   }
@@ -137,12 +204,21 @@ export class AppComponent implements OnInit {
     this.fileService.loadFile(path,
       (percent) => {
         this.showProgressBar = true;
-        this.cd.detectChanges();      // notify angular about view changes
+        this.cd.detectChanges(); // notify angular about view changes
       }).then(fileInfo => {
         this.filePath = fileInfo.path;
         this.linkerMap = fileInfo.payload as LinkerMap;
         this.dataset = this.prepareDataset(this.linkerMap);
         this.showProgressBar = false;
+        this.usedResources = this.linkerMap.usedResources.memory;
+        this.cd.detectChanges(); // notify angular about view changes
+
+        const multiColumnSortingPlugin = this.hotRegisterer.getInstance(this.locationTableId).getPlugin('multiColumnSorting');
+        multiColumnSortingPlugin.sort([{
+          column: 0, sortOrder: 'asc'
+        }, {
+          column: 1, sortOrder: 'desc'
+        }]);
       });
   }
 }

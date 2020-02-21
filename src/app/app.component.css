@@ -57,17 +57,45 @@
   margin: auto 10px;
 }
 
-#tables {
+.table {
   flex-grow: 1;
   overflow: auto;
   display: flex;
 }
 
-.flex {
+.progress-bar {
   display: flex;
+}
+
+.split-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.split-container-item {
+  display: flex;
+  flex-grow: 1;
+  padding: 5px;
+  flex-direction: column;
+  height: 100%;
+  width: 50%;
+}
+
+.memory-table {
+  height: 185px;
+  overflow: auto;
+  border: 1px black dashed;
 }
 
 .hot {
   overflow: hidden;
   flex-grow: 1;
+}
+
+mat-table mat-row, mat-header-row {
+  min-height: 30px;
 }

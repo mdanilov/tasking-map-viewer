@@ -37,9 +37,22 @@ export interface LocateRecord {
   chipAddr: number;
   alignment: number;
 }
+export interface Memory {
+  name: string;
+  code: number;
+  data: number;
+  reserved: number;
+  free: number;
+  total: number;
+}
+
+export interface Resources {
+  memory: Memory[];
+}
 
 export interface LinkerMap {
   processedFiles: File[];
   linkResult: LinkRecord[];
   locateResult: LocateRecord[];
+  usedResources: Resources;
 }

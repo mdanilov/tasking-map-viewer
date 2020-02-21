@@ -7,6 +7,7 @@ enum FilePart {
   ProcessedFilePaths,
   LinkPart,
   LocateResults,
+  UsedResources,
   UnknownPart
 }
 
@@ -14,6 +15,7 @@ const FilePartKeywords = new Map();
 FilePartKeywords.set(FilePart.ProcessedFilePaths, /^[\*]+\s*Processed Files\s*[\*]+$/);
 FilePartKeywords.set(FilePart.LinkPart, /^[\*]+\s*Link Result\s*[\*]+$/);
 FilePartKeywords.set(FilePart.LocateResults, /^[\*]+\s*Locate Result\s*[\*]+$/);
+FilePartKeywords.set(FilePart.UsedResources, /^[\*]+\s*Used Resources\s*[\*]+$/);
 FilePartKeywords.set(FilePart.UnknownPart, /^[\*]* .* [\*]*$/);
 
 function getSectionType(section: string): lm.SectionType {
@@ -33,13 +35,13 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
     const linkerMap: lm.LinkerMap = {
       processedFiles: [],
       linkResult: [],
-      locateResult: []
+      locateResult: [],
+      usedResources: { memory: [] }
     };
     let linesCount = 0;
     let filePart: FilePart | undefined = null;
     let previous: object = null; // temporary object to handle multiline cases
     const linkResult = new Map<string, lm.LinkRecord>();
-    const locateResult = new Map<string, lm.LocateRecord>();
 
     const readInterface = readline.createInterface({
       input: fs.createReadStream(path),
@@ -79,49 +81,70 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
             linkerMap.processedFiles.push(file);
           }
         }
+      } else if (filePart === FilePart.UsedResources) {
+        const regex = new RegExp(''
+          + /^\|([^|]*)\|/.source   // Memory
+          + /([^|]*)\|/.source      // Code
+          + /([^|]*)\|/.source      // Data
+          + /([^|]*)\|/.source      // Reserved
+          + /([^|]*)\|/.source      // Free
+          + /([^|]*)\|$/.source     // Total
+        );
+        const found = line.match(regex);
+        if (found && found[1].trim() !== 'Memory' && found[1].trim() !== 'Total') {
+          const record = {
+            name: found[1].trim(),
+            code: parseInt(found[2].trim(), 16),
+            data: parseInt(found[3].trim(), 16),
+            reserved: parseInt(found[4].trim(), 16),
+            free: parseInt(found[5].trim(), 16),
+            total: parseInt(found[6].trim(), 16)
+          };
+          linkerMap.usedResources.memory.push(record);
+        }
       // parse Linker Result Part
       } else if (filePart === FilePart.LinkPart) {
         // check for records delimiter
         const delimeterRegEx = /^\|-+\|$/;
         if (delimeterRegEx.test(line)) {
           previous = null;
-        }
+        } else {
+          const regex = new RegExp(''
+            + /^\|([^|]*)\|/.source   // [in] File
+            + /([^|]*)\|/.source      // [in] Section
+            + /([^|]*)\|/.source      // [in] Size (MAU)
+            + /([^|]*)\|/.source      // [out] Offset
+            + /([^|]*)\|/.source      // [out] Section
+            + /([^|]*)\|$/.source     // [out] Size (MAU)
+          );
+          const found = line.match(regex);
+          // skip table header started with '[in] File' column
+          if (found && found[1].trim() !== '[in] File') {
+            // handle multiline case
+            if (previous && found[1].trim().length === 0) {
+              const previousRecord = previous as lm.LinkRecord;
+              // concat string fields in 'previous' record
+              previousRecord.sections[previousRecord.sections.length - 1].in.section += found[2].trim();
+              previousRecord.sections[previousRecord.sections.length - 1].out.section += found[5].trim();
+            } else {
+              const filename = found[1].trim();
 
-        const regex = new RegExp(''
-          + /^\|\s+(\S.*\S|)\s+/.source     // [in] File
-          + /\|\s+(\S.*\S|)\s+/.source      // [in] Section
-          + /\|\s+(\S.*\S|)\s+/.source      // [in] Size (MAU)
-          + /\|\s+(\S.*\S|)\s+/.source      // [out] Offset
-          + /\|\s+(\S.*\S|)\s+/.source      // [out] Section
-          + /\|\s+(\S.*\S|)\s+\|$/.source   // [out] Size (MAU)
-        );
-        const found = line.match(regex);
-        // skip table header started with '[in] File' column
-        if (found && found[1] !== '[in] File') {
-          // handle multiline case
-          if (previous && found[1].length === 0) {
-            const previousRecord = previous as lm.LinkRecord;
-            // concat string fields in 'previous' record
-            previousRecord.sections[previousRecord.sections.length - 1].in.section += found[2];
-            previousRecord.sections[previousRecord.sections.length - 1].out.section += found[5];
-          } else {
-            const filename = found[1];
+              // add new file to the map if not yet exist
+              if (!linkResult.has(filename)) {
+                linkResult.set(filename, { fileName: filename, sections: []});
+              }
 
-            // add new file to the map if not yet exist
-            if (!linkResult.has(filename)) {
-              linkResult.set(filename, { fileName: filename, sections: []});
+              // save ref to the 'previous' var for multiline case
+              const record = linkResult.get(filename);
+              previous = record;
+
+              // add new section to file record
+              record.sections.push({
+                type: getSectionType(found[2].trim()),
+                in: { section: found[2].trim(), size: parseInt(found[3].trim(), 16) },
+                out: { offset: parseInt(found[4].trim(), 16), section: found[5].trim(), size: parseInt(found[6].trim(), 16) }
+              });
             }
-
-            // save ref to the 'previous' var for multiline case
-            const record = linkResult.get(filename);
-            previous = record;
-
-            // add new section to file record
-            record.sections.push({
-              type: getSectionType(found[2]),
-              in: { section: found[2], size: parseInt(found[3], 16) },
-              out: { offset: parseInt(found[4], 16), section: found[5], size: parseInt(found[6], 16) }
-            });
           }
         }
       } else if (filePart === FilePart.LocateResults) {
@@ -132,31 +155,31 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
         }
 
         const recordRegEx = new RegExp(''
-          + /^\|\s+(\S.*\S|)\s+/.source     // Chip
-          + /\|\s+(\S.*\S|)\s+/.source      // Group
-          + /\|\s+(\S.*\S|)\s+/.source      // Section
-          + /\|\s+(\S.*\S|)\s+/.source      // Size (MAU)
-          + /\|\s+(\S.*\S|)\s+/.source      // Space addr
-          + /\|\s+(\S.*\S|)\s+/.source      // Chip addr
-          + /\|\s+(\S.*\S|)\s+\|$/.source   // Alignment
+          + /^\|([^|]*)\|/.source   // Chip
+          + /([^|]*)\|/.source      // Group
+          + /([^|]*)\|/.source      // Section
+          + /([^|]*)\|/.source      // Size (MAU)
+          + /([^|]*)\|/.source      // Space addr
+          + /([^|]*)\|/.source      // Chip addr
+          + /([^|]*)\|$/.source     // Alignment
         );
         const found = line.match(recordRegEx);
         // skip table header started with '[in] File' column
-        if (found && found[1] !== 'Chip') {
+        if (found && found[1].trim() !== 'Chip') {
           // handle multiline case
-          if (previous && found[1].length === 0) {
+          if (previous && found[1].trim().length === 0) {
             const previousRecord = previous as lm.LocateRecord;
             // concat string fields in 'previous' record
-            previousRecord.section += found[3];
+            previousRecord.section += found[3].trim();
           } else {
             const record = {
-              chip: found[1],
-              group: found[2],
-              section: found[3],
-              size: parseInt(found[4], 16),
-              spaceAddr: parseInt(found[5], 16),
-              chipAddr: parseInt(found[6], 16),
-              alignment: parseInt(found[7], 16)
+              chip: found[1].trim(),
+              group: found[2].trim(),
+              section: found[3].trim(),
+              size: parseInt(found[4].trim(), 16),
+              spaceAddr: parseInt(found[5].trim(), 16),
+              chipAddr: parseInt(found[6].trim(), 16),
+              alignment: parseInt(found[7].trim(), 16)
             };
             linkerMap.locateResult.push(record);
             // save ref to the 'previous' var for multiline case

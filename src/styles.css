@@ -11,7 +11,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 .handsontable tbody th, .handsontable tbody td {
     background-color: #fff0;
-    border: 0;
+    border: 0 1px;
 }
 
 .handsontable tbody tr:nth-child(even) {

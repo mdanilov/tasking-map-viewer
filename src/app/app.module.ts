@@ -5,6 +5,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
 import { HotTableModule } from '@handsontable/angular';
 
 import { AppComponent } from './app.component';
@@ -18,6 +19,7 @@ import { AppComponent } from './app.component';
     HotTableModule.forRoot(),
     BrowserAnimationsModule,
     MatProgressBarModule,
+    MatTableModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule
