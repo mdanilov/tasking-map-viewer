@@ -7,6 +7,7 @@ import { FileLoadResponse } from '../common/ipc/file.load.response';
 import { FileLoadRequest } from '../common/ipc/file.load.request';
 
 let win: BrowserWindow;
+let lastPath: string;
 
 app.on('ready', createWindow);
 
@@ -43,13 +44,15 @@ ipcMain.on('loadFile', (event, arg) => {
 
   let fpath = (arg as FileLoadRequest).path;
   if (fpath == null) {
-    const files = dialog.showOpenDialogSync({
+    const files = dialog.showOpenDialogSync(win, {
       filters: [{ name: 'Linker Map File', extensions: ['map'] }],
-      properties: ['openFile']
+      properties: ['openFile'],
+      defaultPath: lastPath
     });
 
     if (files != null && files.length > 0) {
       fpath = files[0];
+      lastPath = fpath;
     }
   }
 

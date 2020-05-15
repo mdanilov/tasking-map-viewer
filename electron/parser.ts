@@ -124,14 +124,18 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
             if (previous && found[1].trim().length === 0) {
               const previousRecord = previous as lm.LinkRecord;
               // concat string fields in 'previous' record
-              previousRecord.sections[previousRecord.sections.length - 1].in.section += found[2].trim();
-              previousRecord.sections[previousRecord.sections.length - 1].out.section += found[5].trim();
+              const inSection = found[2].trim();
+              const outSection = found[5].trim();
+              previousRecord.sections[previousRecord.sections.length - 1].in.section +=
+                inSection.startsWith('(') ? ' ' + inSection : inSection;
+              previousRecord.sections[previousRecord.sections.length - 1].out.section +=
+                outSection.startsWith('(') ? ' ' + outSection : outSection;
             } else {
               const filename = found[1].trim();
 
               // add new file to the map if not yet exist
               if (!linkResult.has(filename)) {
-                linkResult.set(filename, { fileName: filename, sections: []});
+                linkResult.set(filename, { fileName: filename, sections: [] });
               }
 
               // save ref to the 'previous' var for multiline case
@@ -170,7 +174,9 @@ export async function parseMapFile(path: string): Promise<lm.LinkerMap> {
           if (previous && found[1].trim().length === 0) {
             const previousRecord = previous as lm.LocateRecord;
             // concat string fields in 'previous' record
-            previousRecord.section += found[3].trim();
+            const section = found[3].trim();
+            previousRecord.section +=
+              section.startsWith('(') ? ' ' + section : section;
           } else {
             const record = {
               chip: found[1].trim(),
