@@ -185,7 +185,7 @@ export class AppComponent implements OnInit {
           if (!fileChipSizeStats.has(location.chip)) {
             fileChipSizeStats.set(location.chip, location.size);
           } else {
-            fileChipSizeStats[location.chip] += location.size;
+            fileChipSizeStats.set(location.chip, fileChipSizeStats.get(location.chip) + location.size);
           }
         }
       });
