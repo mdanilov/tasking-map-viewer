@@ -5,14 +5,14 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "type": "node",
-        "request": "launch",
         "name": "Electron Main",
-        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
         "program": "${workspaceFolder}/dist/electron/main.js",
+        "request": "launch",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
         "skipFiles": [
           "<node_internals>/**"
-        ]
+        ],
+        "type": "pwa-node"
       }
     ]
 }

@@ -33,6 +33,12 @@
         <mat-form-field>
           <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
         </mat-form-field>
+        <p>
+          <mat-checkbox style="margin-right: 20px;" (change)="toggleShowObjectFilesCheckbox($event.checked)">Show object files</mat-checkbox>
+          <label>Group by: </label>
+          <mat-checkbox style="margin: 5px;" checked="true" (change)="checkGroupByGroup($event.checked)">GROUP</mat-checkbox>
+          <mat-checkbox style="margin: 5px;" checked="true" (change)="checkGroupByModule($event.checked)">Module</mat-checkbox>
+        </p>
       </div>
       <div class="split-container-item">
         <div class="memory-table">
@@ -83,6 +89,7 @@
             [data]="locationTableDataset">
               <hot-column data="chip" [readOnly]="true" title="CHIP"></hot-column>
               <hot-column data="size" [readOnly]="true" title="SIZE"></hot-column>
+              <hot-column data="group" [readOnly]="true" title="GROUP"></hot-column>
               <hot-column data="name" [readOnly]="true" title="Module"></hot-column>
           </hot-table>
         </div>
