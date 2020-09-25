@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { ReplaySubject } from 'rxjs';
 
 import { Memory, LinkerMap, LocateRecord } from '../../common/interfaces/linkermap';
 
@@ -13,7 +13,7 @@ export interface ResourceStats extends Memory {
 })
 export class StatsService {
 
-  private usedResourcesSource = new Subject<ResourceStats[]>();
+  private usedResourcesSource = new ReplaySubject<ResourceStats[]>();
 
   resourceStats = this.usedResourcesSource.asObservable();
 

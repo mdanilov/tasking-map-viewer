@@ -23,13 +23,11 @@ export class ResourcesComponent implements OnInit {
   }
 
   constructor(private statsService: StatsService) {
-    statsService.resourceStats.subscribe(
-      resources => {
-        this.usedResources = resources;
-      });
   }
 
   ngOnInit(): void {
+    this.statsService.resourceStats.subscribe(res => {
+      this.usedResources = res;
+    });
   }
-
 }
