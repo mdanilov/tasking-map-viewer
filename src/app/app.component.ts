@@ -55,7 +55,7 @@ export class AppComponent implements OnInit {
   locationTableSettings: Handsontable.default.GridSettings = {
     rowHeaders: false,
     colHeaders: true,
-    colWidths: [20, 10, 20],
+    colWidths: [20, 10, 10, 20],
     currentRowClassName: 'currentRow',
     manualColumnResize: true,
     stretchH: 'all',
@@ -65,7 +65,7 @@ export class AppComponent implements OnInit {
     licenseKey: 'non-commercial-and-evaluation',
     disableVisualSelection: 'area',
     fragmentSelection: true, // enable text selection within table
-    dataSchema: { name: null, chip: null, group: null, size: null },
+    dataSchema: { name: null, chip: null, group: null, size: null, actualSize: null },
     wordWrap: true, // the text of the cell content is wrapped if it does not fit in the fixed column width
     autoColumnSize: false, // disable setting column widths based on their widest cells
     nestedRows: false,
@@ -176,6 +176,16 @@ export class AppComponent implements OnInit {
     return result;
   }
 
+  calcActualSize(location: LocateRecord): number {
+    let size = location.size;
+    if (location.size < location.alignment) {
+      size = location.alignment;
+    } else {
+      size = location.size + (location.alignment - location.size % location.alignment);
+    }
+    return size;
+  }
+
   prepareDataset(linkerMap: LinkerMap) {
     const fileToArchive = new Map<string, string>();
     const sectionLocationMapping = new Map<string, LocateRecord>();
@@ -224,11 +234,18 @@ export class AppComponent implements OnInit {
             key += name;
           }
           if (!locationDataset.has(key)) {
-            locationDataset.set(key, { name: new Set(), chip: location.chip, group: new Set(), size: location.size });
+            locationDataset.set(key, {
+              name: new Set(),
+              chip: location.chip,
+              group: new Set(),
+              size: location.size,
+              actualSize: this.calcActualSize(location)
+            });
             locationDataset.get(key).name.add(name);
             locationDataset.get(key).group.add(location.group);
           } else {
             locationDataset.get(key).size += location.size;
+            locationDataset.get(key).actualSize += this.calcActualSize(location);
             if (!this.groupByGroup) {
               locationDataset.get(key).group.add(location.group);
             }
