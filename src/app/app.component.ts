@@ -3,6 +3,7 @@ import { HotTableRegisterer } from '@handsontable/angular';
 import * as Handsontable from 'handsontable';
 
 import { FileService, FileProgressCallback } from './file.service';
+import { StatsService } from './stats.service';
 import { LinkerMap, LinkRecord, SectionType, LocateRecord } from '../../common/interfaces/linkermap';
 
 @Component({
@@ -23,9 +24,6 @@ export class AppComponent implements OnInit {
   bssSectionNames = '.bss';
   dataSectionNames = '.data';
   textSectionNames = '.text';
-
-  displayedColumns: string[] = ['name', 'data', 'free', 'chipData', 'chipFree', 'total'];
-  usedResources = [];
 
   private hotRegisterer = new HotTableRegisterer();
   modulesTableId = 'modules-table-id';
@@ -82,7 +80,7 @@ export class AppComponent implements OnInit {
     }
   };
 
-  constructor(private fileService: FileService, private cd: ChangeDetectorRef) {
+  constructor(private fileService: FileService, private statsService: StatsService, private cd: ChangeDetectorRef) {
     this.showProgressBar = false;
     this.currentView = 'main';
   }
@@ -176,16 +174,6 @@ export class AppComponent implements OnInit {
     return result;
   }
 
-  calcActualSize(location: LocateRecord): number {
-    let size = location.size;
-    if (location.size < location.alignment) {
-      size = location.alignment;
-    } else if ((location.size % location.alignment) !== 0) {
-      size = location.size + (location.alignment - location.size % location.alignment);
-    }
-    return size;
-  }
-
   prepareDataset(linkerMap: LinkerMap) {
     const fileToArchive = new Map<string, string>();
     const sectionLocationMapping = new Map<string, LocateRecord>();
@@ -239,13 +227,13 @@ export class AppComponent implements OnInit {
               chip: location.chip,
               group: new Set(),
               size: location.size,
-              actualSize: this.calcActualSize(location)
+              actualSize: this.statsService.calcActualSize(location)
             });
             locationDataset.get(key).name.add(name);
             locationDataset.get(key).group.add(location.group);
           } else {
             locationDataset.get(key).size += location.size;
-            locationDataset.get(key).actualSize += this.calcActualSize(location);
+            locationDataset.get(key).actualSize += this.statsService.calcActualSize(location);
             if (!this.groupByGroup) {
               locationDataset.get(key).group.add(location.group);
             }
@@ -276,29 +264,8 @@ export class AppComponent implements OnInit {
         this.linkerMap = fileInfo.payload as LinkerMap;
         this.dataset = this.prepareDataset(this.linkerMap);
         this.showProgressBar = false;
-        this.usedResources = this.linkerMap.usedResources.memory;
 
-        // calc actual sizes
-        const sectionLocationMapping = new Map<string, LocateRecord>();
-        this.linkerMap.locateResult.forEach((locationRecord) => {
-          sectionLocationMapping.set(locationRecord.section, locationRecord);
-        });
-        this.usedResources.forEach((resource) => {
-          resource.chipData = 0;
-        });
-        this.linkerMap.linkResult.forEach((record) => {
-          record.sections.forEach((section) => {
-            const location = sectionLocationMapping.get(section.out.section);
-            if (location) {
-              const key = location.chip;
-              const resource = this.usedResources.find((e) => e.name === key);
-              resource.chipData += this.calcActualSize(location);
-            }
-          });
-        });
-        this.usedResources.forEach((resource) => {
-          resource.chipFree = resource.total - resource.chipData;
-        });
+        this.statsService.analyze(this.linkerMap);
 
         this.cd.detectChanges(); // notify angular about view changes
 

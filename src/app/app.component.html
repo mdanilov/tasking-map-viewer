@@ -42,34 +42,7 @@
       </div>
       <div class="split-container-item">
         <div class="memory-table">
-          <mat-table mat-table [dataSource]="usedResources">
-            <ng-container matColumnDef="name">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Memory </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.name}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="data">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Used </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.data + element.code}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="free">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Free </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.free}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="chipData">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Used (Chip) </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.chipData}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="chipFree">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Free (Chip) </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.chipFree}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="total">
-              <mat-header-cell mat-header-cell *matHeaderCellDef> Total </mat-header-cell>
-              <mat-cell mat-cell *matCellDef="let element"> {{element.total - element.reserved}} </mat-cell>
-            </ng-container>
-            <mat-header-row mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-            <mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-          </mat-table>
+          <app-resources></app-resources>
         </div>
       </div>
     </div>

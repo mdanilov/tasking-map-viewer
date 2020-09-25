@@ -1,0 +1,12 @@
+mat-table mat-row, mat-header-row {
+    min-height: 30px;
+}
+
+.mat-column-data, .mat-column-free, .mat-column-total, .mat-column-chipData, .mat-column-chipFree {
+    text-align: right;
+    justify-content: flex-end;
+}
+
+.mat-column-name {
+    flex: 0 0 100px;
+}

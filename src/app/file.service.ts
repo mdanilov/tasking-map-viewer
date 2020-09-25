@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { IpcRenderer } from 'electron';
 
 import { FileLoadResponse } from '../../common/ipc/file.load.response';
-import { FileLoadRequest } from '../../common/ipc/file.load.request';
 
 export interface FileInfo {
   payload: any;
