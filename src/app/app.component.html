@@ -5,13 +5,13 @@
     </button>
     <form>
       <mat-form-field>
-        <input matInput placeholder="Bss section filter" [value]="bssSectionNames" (input)="bssSectionNames = $event.target.value">
+        <input matInput placeholder="Bss section filter" [value]="statsParams.bssSectionNames" (input)="statsParams.bssSectionNames = $event.target.value">
       </mat-form-field>
       <mat-form-field>
-        <input matInput placeholder="Data section filter" [value]="dataSectionNames" (input)="dataSectionNames = $event.target.value">
+        <input matInput placeholder="Data section filter" [value]="statsParams.dataSectionNames" (input)="statsParams.dataSectionNames = $event.target.value">
       </mat-form-field>
       <mat-form-field>
-        <input matInput placeholder="Text section filter" [value]="textSectionNames" (input)="textSectionNames = $event.target.value">
+        <input matInput placeholder="Text section filter" [value]="statsParams.textSectionNames" (input)="statsParams.textSectionNames = $event.target.value">
       </mat-form-field>
     </form>
   </div>
