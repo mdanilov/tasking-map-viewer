@@ -24,7 +24,7 @@ export class AppComponent implements OnInit {
   dataSectionNames = '.data';
   textSectionNames = '.text';
 
-  displayedColumns: string[] = ['name', 'data', 'free', 'total'];
+  displayedColumns: string[] = ['name', 'data', 'free', 'chipData', 'chipFree', 'total'];
   usedResources = [];
 
   private hotRegisterer = new HotTableRegisterer();
@@ -180,7 +180,7 @@ export class AppComponent implements OnInit {
     let size = location.size;
     if (location.size < location.alignment) {
       size = location.alignment;
-    } else {
+    } else if ((location.size % location.alignment) !== 0) {
       size = location.size + (location.alignment - location.size % location.alignment);
     }
     return size;
@@ -277,6 +277,29 @@ export class AppComponent implements OnInit {
         this.dataset = this.prepareDataset(this.linkerMap);
         this.showProgressBar = false;
         this.usedResources = this.linkerMap.usedResources.memory;
+
+        // calc actual sizes
+        const sectionLocationMapping = new Map<string, LocateRecord>();
+        this.linkerMap.locateResult.forEach((locationRecord) => {
+          sectionLocationMapping.set(locationRecord.section, locationRecord);
+        });
+        this.usedResources.forEach((resource) => {
+          resource.chipData = 0;
+        });
+        this.linkerMap.linkResult.forEach((record) => {
+          record.sections.forEach((section) => {
+            const location = sectionLocationMapping.get(section.out.section);
+            if (location) {
+              const key = location.chip;
+              const resource = this.usedResources.find((e) => e.name === key);
+              resource.chipData += this.calcActualSize(location);
+            }
+          });
+        });
+        this.usedResources.forEach((resource) => {
+          resource.chipFree = resource.total - resource.chipData;
+        });
+
         this.cd.detectChanges(); // notify angular about view changes
 
         const multiColumnSortingPlugin = this.hotRegisterer.getInstance(this.locationTableId).getPlugin('multiColumnSorting');
