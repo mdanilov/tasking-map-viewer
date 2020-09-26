@@ -135,6 +135,40 @@ export class AppComponent implements OnInit {
     }
   }
 
+  onExportCsvLocation() {
+    const table = this.hotRegisterer.getInstance(this.locationTableId);
+    if (table) {
+      const exportedString = table.getPlugin('exportFile').exportAsString('csv', {
+        bom: false,
+        columnDelimiter: ',',
+        columnHeaders: true,
+        exportHiddenColumns: true,
+        exportHiddenRows: true,
+        mimeType: 'text/csv',
+        rowDelimiter: '\r\n',
+        rowHeaders: false
+      });
+      this.fileService.saveFile(exportedString);
+    }
+  }
+
+  onExportCsvModules() {
+    const table = this.hotRegisterer.getInstance(this.modulesTableId);
+    if (table) {
+      const exportedString = table.getPlugin('exportFile').exportAsString('csv', {
+        bom: false,
+        columnDelimiter: ',',
+        columnHeaders: true,
+        exportHiddenColumns: true,
+        exportHiddenRows: true,
+        mimeType: 'text/csv',
+        rowDelimiter: '\r\n',
+        rowHeaders: false
+      });
+      this.fileService.saveFile(exportedString);
+    }
+  }
+
   toggleShowObjectFilesCheckbox(checked: boolean) {
     this.statsParams.showObjectFiles = checked;
     this.statsService.setParams(this.statsParams);

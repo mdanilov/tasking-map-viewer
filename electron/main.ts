@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import * as fs from 'fs';
 
 import { parseMapFile } from './parser';
 import { FileLoadResponse } from '../common/ipc/file.load.response';
-import { FileLoadRequest } from '../common/ipc/file.load.request';
+import { FileLoadRequest, FileSaveRequest } from '../common/ipc/file.load.request';
 
 let win: BrowserWindow;
 let lastPath: string;
@@ -38,6 +39,27 @@ function createWindow() {
     win = null;
   });
 }
+
+ipcMain.on('saveFile', (event, arg) => {
+  const content = (arg as FileSaveRequest).content;
+  dialog.showSaveDialog({
+    title: 'Select the File Path to save',
+    defaultPath: lastPath,
+    buttonLabel: 'Save',
+    filters: [{ name: 'CSV File', extensions: ['csv']}]
+  }).then(file => {
+      console.log(file.canceled);
+      if (!file.canceled) {
+        console.log(file.filePath.toString());
+        fs.writeFile(file.filePath.toString(), content, err => {
+          if (err) { throw err; }
+          console.log('Saved!');
+        });
+      }
+  }).catch(err => {
+    console.log(err);
+  });
+});
 
 ipcMain.on('loadFile', (event, arg) => {
   const response: FileLoadResponse = new FileLoadResponse();

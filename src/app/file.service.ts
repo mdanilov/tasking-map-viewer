@@ -24,6 +24,10 @@ export class FileService {
     }
   }
 
+  saveFile(content: string) {
+    this.ipc.send('saveFile', { content });
+  }
+
   async loadFile(path?: string, progressCallback?: FileProgressCallback): Promise<FileInfo> {
     return new Promise<FileInfo>((resolve, reject) => {
       this.ipc.on('loadFileResponse', (event, arg) => {

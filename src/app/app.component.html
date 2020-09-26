@@ -48,6 +48,10 @@
     </div>
     <div class="split-container full-height">
       <div class="split-container-item">
+        <button mat-flat-button color="primary" style="width: fit-content; margin-bottom: 8px;" (click)="onExportCsvModules()">
+          <span class="material-icons">table_view</span>
+          Export .CSV
+        </button>
         <div class="table">
           <hot-table
             [hotId]="modulesTableId"
@@ -62,6 +66,16 @@
         </div>
       </div>
       <div class="split-container-item">
+        <p style="margin: 0;">
+          <button mat-flat-button color="primary" style="width: fit-content; margin-bottom: 8px;" (click)="onExportCsvLocation()">
+            <span class="material-icons">table_view</span>
+            Export .CSV
+          </button>
+          <button mat-flat-button color="warn" style="width: fit-content; margin-bottom: 8px; margin-left: 8px;" (click)="onEdit()">
+            <span class="material-icons">edit</span>
+            Editor
+          </button>
+        </p>
         <div class="table">
           <hot-table
             class="hot"
